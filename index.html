@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>ecom</title>
+        <style>
+            body {
+                margin-left: auto;
+                margin-right: auto;
+                width: 80%;
+                margin-top: 30px;
+            }
+        </style>
+    </head>
+    <body>
+        <h3>Login</h3>
+        <div id="app">
+            {{ message }}
+            <hr/>
+            Login With: 
+            
+            <p>
+                <a href="#">Spring oauth2</a>
+            </p>
+            <p>
+                <a href="#">Google</a>
+            </p>
+            <p>
+                <a href="#">Github</a>
+            </p>
+        
+        </div>
+        
+        <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+        <script>
+            const { createApp } = Vue
+
+            createApp({
+                data() {
+                return {
+                    message: 'Hello Vue!'
+                }
+                }
+            }).mount('#app')
+        </script>
+    </body>
+</html>
