@@ -14,35 +14,80 @@
         </style>
     </head>
     <body>
-        <h3>Login</h3>
+        <h3>Login With</h3>
         <div id="app">
-            {{ message }}
+            <router-link to="/">Home</router-link> |
+            <router-link to="/about">About</router-link> |
+            <router-link to="/login">Login With</router-link>
             <hr/>
-            Login With: 
-            
-            <p>
-                <a href="#">Spring oauth2</a>
-            </p>
-            <p>
-                <a href="#">Google</a>
-            </p>
-            <p>
-                <a href="#">Github</a>
-            </p>
-        
+            <router-view></router-view>
+            <hr/>
         </div>
+        <template id="login">
+            <p>Chose one to Login With: </p>
+
+            {{ message }}
+            <p>
+                <button @click="oauth2Login">Spring oauth2</button>
+            </p>
+            <p>
+                <button>Google</button>
+            </p>
+            <p>
+                <button>Github</button>
+            </p>
+        </template>
+        <template id="dashboard">
+            <p>Dashboard</p>
+        </template>
         
         <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-        <script>
-            const { createApp } = Vue
+        <script src="https://unpkg.com/vue-router@4"></script>
+        <script src="oauth-utility.js"></script>
 
-            createApp({
-                data() {
+        <script>
+            const { createApp, ref } = Vue
+        
+            const Home = { template: '<div>Home</div>' }
+            const About = { template: '<div>About</div>' }
+            const Login = { template: '#login' }
+            const Dashboard = { template: '#dashboard'}
+
+            const routes = [
+                { path: '/', component: Home },
+                { path: '/about', component: About },
+                { path: '/login', component: Login },
+                { path: '/callback', component: Dashboard }
+            ]
+
+            const router = VueRouter.createRouter({
+                // 4. Provide the history implementation to use. We
+                // are using the hash history for simplicity here.
+                history: VueRouter.createWebHashHistory(),
+                routes, // short for `routes: routes`
+            })
+
+            const app = createApp({
+              setup() {
+                const message = ref('Hello vue!')
+                function oauth2Login(){
+                    const codeVerifier = generateCodeVerifier();
+
+                    generateCodeChallengeFromVerifier(codeVerifier)
+                    .then(codeChallange => {
+                        console.log(codeVerifier, codeChallange);
+                        window.location.href = `http://localhost:8080/oauth2/authorize?response_type=code&client_id=public-client&scope=openid&code_challenge=${codeChallange}&code_challenge_method=S256&code_verifier=${codeVerifier}&redirect_uri=http://localhost:3000/callback`;
+                    }) 
+                } 
                 return {
-                    message: 'Hello Vue!'
+                  message,
+                  oauth2Login
                 }
-                }
-            }).mount('#app')
-        </script>
+              }
+            })
+            
+            app.use(router).mount('#app')
+
+          </script>
     </body>
 </html>
