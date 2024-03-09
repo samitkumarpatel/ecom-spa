@@ -1,93 +1,86 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>ecom</title>
-        <style>
-            body {
-                margin-left: auto;
-                margin-right: auto;
-                width: 80%;
-                margin-top: 30px;
-            }
-        </style>
-    </head>
-    <body>
-        <h3>Login With</h3>
-        <div id="app">
-            <router-link to="/">Home</router-link> |
-            <router-link to="/about">About</router-link> |
-            <router-link to="/login">Login With</router-link>
-            <hr/>
-            <router-view></router-view>
-            <hr/>
-        </div>
-        <template id="login">
-            <p>Chose one to Login With: </p>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ecom</title>
+    <style>
+        body {
+            margin-left: auto;
+            margin-right: auto;
+            width: 80%;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <h3>Login With</h3>
+    <div id="app">
+        <router-link to="/">Home</router-link> |
+        <router-link to="/about">About</router-link> |
+        <router-link to="/login">Login With</router-link>
+        <hr/>
+        <router-view></router-view>
+        <hr/>
+    </div>
 
-            {{ message }}
-            <p>
-                <button @click="oauth2Login">Spring oauth2</button>
-            </p>
-            <p>
-                <button>Google</button>
-            </p>
-            <p>
-                <button>Github</button>
-            </p>
-        </template>
-        <template id="dashboard">
-            <p>Dashboard</p>
-        </template>
-        
-        <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-        <script src="https://unpkg.com/vue-router@4"></script>
-        <script src="oauth-utility.js"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/vue-router@4"></script>
+    <script src="oauth-utility.js"></script>
 
-        <script>
-            const { createApp, ref } = Vue
-        
-            const Home = { template: '<div>Home</div>' }
-            const About = { template: '<div>About</div>' }
-            const Login = { template: '#login' }
-            const Dashboard = { template: '#dashboard'}
+    <script>
+        const { createApp, ref } = Vue
+        const { createRouter, createWebHistory, createWebHashHistory } = VueRouter
 
-            const routes = [
-                { path: '/', component: Home },
-                { path: '/about', component: About },
-                { path: '/login', component: Login },
-                { path: '/callback', component: Dashboard }
-            ]
-
-            const router = VueRouter.createRouter({
-                // 4. Provide the history implementation to use. We
-                // are using the hash history for simplicity here.
-                history: VueRouter.createWebHashHistory(),
-                routes, // short for `routes: routes`
-            })
-
-            const app = createApp({
-              setup() {
-                const message = ref('Hello vue!')
-                function oauth2Login(){
+        const Home = { template: '<div>Home</div>' }
+        const About = { template: '<div>About</div>' }
+        const Dashboard = { template: '<div>Dashboard</div>' }
+        const Login = {
+            setup() {
+                const message = ref('Chose one to Login With: ')
+                function oauth2Login() {
                     const codeVerifier = generateCodeVerifier();
 
                     generateCodeChallengeFromVerifier(codeVerifier)
-                    .then(codeChallange => {
-                        console.log(codeVerifier, codeChallange);
-                        window.location.href = `http://localhost:8080/oauth2/authorize?response_type=code&client_id=public-client&scope=openid&code_challenge=${codeChallange}&code_challenge_method=S256&code_verifier=${codeVerifier}&redirect_uri=http://localhost:3000/callback`;
-                    }) 
-                } 
-                return {
-                  message,
-                  oauth2Login
+                        .then(codeChallenge => {
+                            console.log(codeVerifier, codeChallenge);
+                            window.location.href = `http://localhost:8080/oauth2/authorize?response_type=code&client_id=public-client&scope=openid&code_challenge=${codeChallenge}&code_challenge_method=S256&code_verifier=${codeVerifier}&redirect_uri=http://localhost:3000/callback`;
+                        })
                 }
-              }
-            })
-            
-            app.use(router).mount('#app')
+                return {
+                    message,
+                    oauth2Login
+                }
+            },
+            template: `
+                <div>
+                    <p>{{ message }}</p>
+                    <p><button @click="oauth2Login">Spring oauth2</button></p>
+                    <p><button>Google</button></p>
+                    <p><button>Github</button></p>
+                </div>
+            `
+        }
 
-          </script>
-    </body>
+        const routes = [
+            { path: '/', component: Home },
+            { path: '/about', component: About },
+            { path: '/login', component: Login },
+            { path: '/callback', component: Dashboard }
+        ]
+
+        // const router = createRouter({
+        //     history: createWebHistory(),
+        //     routes,
+        // })
+
+        const router = createRouter({
+            history: createWebHashHistory(),
+            routes,
+        })
+
+        const app = createApp({})
+        app.use(router).mount('#app')
+    </script>
+</body>
 </html>
