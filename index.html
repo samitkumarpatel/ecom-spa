@@ -29,12 +29,73 @@
     <script src="oauth-utility.js"></script>
 
     <script>
+        const redirectURI = 'http://localhost:3000'
         const { createApp, ref } = Vue
         const { createRouter, createWebHistory, createWebHashHistory } = VueRouter
-
-        const Home = { template: '<div>Home</div>' }
         const About = { template: '<div>About</div>' }
         const Dashboard = { template: '<div>Dashboard</div>' }
+        const Home = { 
+            setup() {
+                const isLogin = ref(false)
+                const loading = ref(false)
+                const e = ref(null)
+
+                const urlParams = new URLSearchParams(window.location.search);
+                const code = urlParams.get('code');
+                
+                console.log(code)
+
+                if(code){
+                    loading.value = true
+                    const pkace = JSON.parse(localStorage.getItem("pkace"))
+
+                    const formData = new URLSearchParams();
+                    formData.append('client_id','public-client')
+                    formData.append('grant_type', 'authorization_code')
+                    formData.append('code', code)
+                    formData.append('code_challenge', pkace['codeChallenge'])
+                    formData.append('code_verifier', pkace['codeVerifier'])
+                    formData.append('code_challenge_method','S256')
+                    formData.append('redirect_uri', redirectURI)
+
+                    fetch('http://localhost:8080/oauth2/token', {
+                        method: 'POST',
+                        //mode: "no-cors",
+                        headers: {
+                            'content-type': 'application/x-www-form-urlencoded'
+                        },
+                        data: formData.toString()
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Failed to obtain access token');
+                        }
+                        return response.json();
+                    })
+                    .then((data) => {
+                        const accessToken = data.access_token;
+                        localStorage.setItem('access_token', accessToken);
+                        loading.value = false
+                        isLogin.value = true
+                    })
+                    .catch((error) => {
+                        e.value = error.message
+                        loading.value = false
+                        console.error('Failed to obtain access token:', error);
+                    });
+                }
+                return {
+                    isLogin, loading, e
+                }
+            },
+            template: `
+                <p v-if="isLogin">You are logged in {{code}}</p>
+                <p v-else>Please <router-link to="/login">Login</router-link> to do more</p>
+                <p v-if="loading">Login in... Please Wait</p>
+                <p v-if="e" style="color:red">{{e}}</p>
+            ` 
+        }
+
         const Login = {
             setup() {
                 const message = ref('Chose one to Login With: ')
@@ -44,7 +105,8 @@
                     generateCodeChallengeFromVerifier(codeVerifier)
                         .then(codeChallenge => {
                             console.log(codeVerifier, codeChallenge);
-                            window.location.href = `http://localhost:8080/oauth2/authorize?response_type=code&client_id=public-client&scope=openid&code_challenge=${codeChallenge}&code_challenge_method=S256&code_verifier=${codeVerifier}&redirect_uri=http://localhost:3000/callback`;
+                            localStorage.setItem('pkace', JSON.stringify({codeVerifier, codeChallenge}))
+                            window.location.href = `http://localhost:8080/oauth2/authorize?response_type=code&client_id=public-client&scope=openid&code_challenge=${codeChallenge}&code_challenge_method=S256&code_verifier=${codeVerifier}&redirect_uri=${redirectURI}`;
                         })
                 }
                 return {
@@ -65,8 +127,7 @@
         const routes = [
             { path: '/', component: Home },
             { path: '/about', component: About },
-            { path: '/login', component: Login },
-            { path: '/callback', component: Dashboard }
+            { path: '/login', component: Login }
         ]
 
         // const router = createRouter({
@@ -79,8 +140,7 @@
             routes,
         })
 
-        const app = createApp({})
-        app.use(router).mount('#app')
+        createApp({}).use(router).mount('#app')
     </script>
 </body>
 </html>
